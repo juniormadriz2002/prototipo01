@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restablecimiento de Contraseña - Sistema de Gestión</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- 1. IMPORTAR EL CEREBRO DE SUPABASE -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Script de Google reCAPTCHA -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <!-- Script de Crypto-js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    
+    <link rel="stylesheet" href="estilos.css">
+
+    <style>
+        body { 
+            margin: 0; display: flex; justify-content: flex-end; align-items: center; min-height: 100vh;
+            background-image: url(logo.jpg);
+            background-size: cover; background-attachment: fixed;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="restablecer-container">
+        <h2 class="text-center mb-2">Restablecer/Desbloquear Usuario</h2>
+        <p class="text-center mb-4">Gestión de Clientes - Conexión Segura</p>
+        
+        <form id="restablecer_form">
+            <div class="mb-3">
+                <label class="form-label fw-bold">Cédula de Identidad</label>
+                <input type="number" id="cedula" class="form-control" required>
+            </div>
+    
+            <div class="g-recaptcha mb-3" data-sitekey="6LccXdssAAAAAFxoNuzMdHES2OtmkmEe46ICpvK1"></div>
+
+            <button type="submit" id="btnrestablecer" class="btn btn-warning btn-lg w-100 mt-2">Restablecer</button>            
+        </form>
+        
+        <a href="Login.html" class="text-decoration-none">
+            <button type="button" id="btn_iniciar_secion" class="btn btn-primary btn-lg w-100 mt-2">Iniciar Sesión</button>
+        </a>
+        <a href="Registro.html" class="text-decoration-none">
+            <button type="button" id="btn_registrarse" class="btn btn-danger btn-lg w-100 mt-2">Registrarse</button>
+        </a>
+    </div>
+
+    <script>
+        // Tus credenciales públicas de Supabase
+        const SUPABASE_URL = "https://ttyvwbahzhqkotndrhgv.supabase.co"; 
+        const SUPABASE_KEY = "sb_publishable_xQ70-YHC-hpwZvF1BJKfpg_qvHy-J4W"; 
+        const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    
+        const formulario = document.getElementById('restablecer_form');
+    
+        if (formulario) {
+            formulario.addEventListener('submit', async function(e) {
+                e.preventDefault();
+    
+                // Validar reCAPTCHA de Google
+                const recaptchaResponse = grecaptcha.getResponse();
+                if (!recaptchaResponse) {
+                    alert("Por favor, completa la verificación de reCAPTCHA.");
+                    return;
+                }
+    
+                const cedulaInput = document.getElementById('cedula').value.trim();
+                if (!cedulaInput) {
+                    alert("Por favor, ingresa un número de cédula válido.");
+                    return;
+                }
+    
+                const btnRestablecer = document.getElementById('btnrestablecer');
+                btnRestablecer.disabled = true;
+                btnRestablecer.textContent = "Enviando correo...";
+    
+                try {
+                    // Llamar directamente a la Edge Function que procesará todo en el servidor
+                    const { data, error } = await _supabase.functions.invoke('enviar-recuperacion', {
+                        body: { cedula: cedulaInput }
+                    });
+    
+                    if (error) {
+                        console.error("Error al invocar la función:", error);
+                        alert("Ocurrió un error al procesar la solicitud.");
+                        return;
+                    }
+    
+                    if (data && data.error) {
+                        alert(data.error);
+                    } else {
+                        alert("¡Correo enviado con éxito! Revisa la bandeja de entrada o spam de tu correo personal.");
+                        formulario.reset();
+                        grecaptcha.reset();
+                    }
+    
+                } catch (err) {
+                    console.error("Error inesperado:", err);
+                    alert("Ocurrió un error inesperado al conectar con el servidor.");
+                } finally {
+                    btnRestablecer.disabled = false;
+                    btnRestablecer.textContent = "Restablecer";
+                }
+            });
+        }
+    </script>
+
+</body>
+</html>

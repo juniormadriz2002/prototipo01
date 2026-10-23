@@ -1,0 +1,133 @@
+
+.registro-container { 
+    width: 50%; height: 100; background: rgba(0, 0, 0, 0.747); padding: 50px; 
+    box-shadow: -10px 0 20px rgba(0,0,0,0.2); overflow-y: auto;
+    display: flex; flex-direction: column; justify-content: center; margin: 5vh;  color: #ffffff !important;
+}
+@media (max-width: 768px) { .registro-container { width: 100%; } }
+
+.login-container { 
+    width: 50%; height: 100; background: rgba(0, 0, 0, 0.747); padding: 50px; 
+    box-shadow: -10px 0 20px rgba(0,0,0,0.2); overflow-y: auto;
+    display: flex; flex-direction: column; justify-content: center; margin-right: 5vh;  color: #ffffff !important;
+}
+@media (max-width: 768px) { .login-container { width: 100%; margin: 5vh;} }
+
+
+.btn-toggle-password {
+    border-left: none;
+    background-color: #fff;
+    border-color: #dee2e6;
+    color: #6c757d;
+}
+
+.restablecer-container { 
+    width: 50%; height: 100; background: rgba(0, 0, 0, 0.747); padding: 50px; 
+    box-shadow: -10px 0 20px rgba(0,0,0,0.2); overflow-y: auto;
+    display: flex; flex-direction: column; justify-content: center; margin-right: 5vh; color: #ffffff !important;
+
+}
+@media (max-width: 768px) { .restablecer-container { width: 100%; margin: 5vh;} }
+
+        .body_pricipal { 
+            margin: 0; display: flex; justify-content: flex-end; align-items: center; min-height: 100vh;
+            background: #f8f9fa url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=2070') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        #restablecer_form .form-label {
+            color: #ffffff !important;
+        }
+
+
+/*-----------------------------------------------------------------------------------------------------------*/
+        
+
+        :root {
+            --sidebar-bg: #1e293b; /* Azul oscuro elegante */
+            --sidebar-hover: #334155;
+            --accent-color: #0284c7; /* Azul sutil para destacar */
+        }
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* Estilos de la Barra Lateral (Sidebar) */
+.sidebar {
+    width: 280px;
+    background-color: var(--sidebar-bg);
+    color: white;
+    min-height: 100vh;
+    position: fixed;
+    left: 0; /* Aseguramos que inicie a la izquierda */
+    transition: all 0.3s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    z-index: 1050; /* Z-index alto para sobreponerse */
+}
+
+/* Clase dinámica para ocultar/mostrar */
+.sidebar.toggled {
+    left: -280px;
+}
+
+/* Contenedor Principal */
+.main-content {
+    margin-left: 280px;
+    padding: 40px;
+    width: calc(100% - 280px);
+    transition: all 0.3s ease-in-out;
+}
+
+/* Expande el contenido cuando la sidebar se oculta */
+.main-content.toggled {
+    margin-left: 0;
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+    .sidebar { left: -280px; } /* Oculta por defecto en móvil */
+    .sidebar.toggled { left: 0; } /* Muestra en móvil al tocar el botón */
+    
+    .main-content { margin-left: 0; width: 100%; padding: 20px; }
+    .main-content.toggled { margin-left: 0; width: 100%; }
+}
+
+        .sidebar .nav-link {
+            color: #cbd5e1;
+            padding: 12px 20px;
+            margin: 4px 15px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background-color: var(--sidebar-hover);
+            color: white;
+        }
+        .sidebar .nav-link.active {
+            border-left: 4px solid var(--accent-color);
+        }
+        .section-view {
+            display: none; /* Escondemos las secciones por defecto */
+        }
+        .section-view.active-view {
+            display: block; /* Solo mostramos la pestaña activa */
+        }
+        .card-custom {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+            background: white;
+        }
+/*------------------------------------------------------------------------------------------------------------------------------*/
+
+.info-usuario-container {
+    display:flex
+}

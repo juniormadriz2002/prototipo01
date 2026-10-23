@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Usuario - Gestión de Iglesia</title>
+
+    <!-- Bootstrap 5 y Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <link rel="stylesheet" href="estilos.css">
+
+    <!-- 1. INICIALIZACIÓN GLOBAL DE SUPABASE Y GUARDIÁN SÍNCRONO -->
+    <script>
+        const SUPABASE_URL = "https://ttyvwbahzhqkotndrhgv.supabase.co"; 
+        const SUPABASE_KEY = "sb_publishable_xQ70-YHC-hpwZvF1BJKfpg_qvHy-J4W"; 
+        const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Validar sesión en el almacenamiento local para evitar bucles
+        const usuarioIdVal = sessionStorage.getItem('usuario_id');
+        const cedulaVal = sessionStorage.getItem('cedula_usuario');
+        if (!usuarioIdVal && !cedulaVal) {
+            alert("Acceso denegado. Por favor, inicia sesión.");
+            window.location.href = 'Login.html';
+        }
+    </script>
+</head>
+<body>
+
+    <!-- BARRA LATERAL (SIDEBAR) -->
+    <div class="sidebar p-3" id="sidebar">
+        <div>
+            <div class="d-flex align-items-center gap-2 px-3 py-4 border-bottom border-secondary mb-4">
+                <i class="bi bi-church fs-3 text-info"></i>
+                <span class="fs-5 fw-bold text-white">Portal Conexión</span>
+            </div>
+            
+            <ul class="nav flex-column gap-1">
+                <li>
+                    <a href="#" class="nav-link active" onclick="cambiarPestana('mi-perfil', this)">
+                        <i class="bi bi-person-circle"></i> Mi Perfil
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-link" onclick="cambiarPestana('actividades', this)">
+                        <i class="bi bi-calendar-event"></i> Actividades
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-link" onclick="cambiarPestana('registro-acciones', this)">
+                        <i class="bi bi-clock-history"></i> Bitácora
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Botón Inferior de Salida -->
+        <div class="px-3 mb-4">
+            <hr class="text-secondary">
+            <button id="btnCerrarSesion" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2 py-2">
+                <i class="bi bi-box-arrow-left"></i> Cerrar Sesión
+            </button>
+        </div>
+    </div>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div class="main-content">
+
+        <!-- Encabezado Superior -->
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+            <div class="d-flex align-items-center">
+                <!-- BOTÓN HAMBURGUESA -->
+                <button id="btn-toggle-sidebar" class="btn btn-light shadow-sm border me-3">
+                    <i class="bi bi-list fs-4"></i>
+                </button>
+                
+                <div>
+                    <h1 class="h3 fw-bold mb-1" id="saludo-usuario">¡Bienvenido de vuelta!</h1>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <p class="text-muted mb-0">Nombre: <span id="nombreusuario" class="fw-semibold">---</span></p>
+                <p class="text-muted mb-0">Apellido: <span id="apellidousuario" class="fw-semibold">---</span></p>
+                <p class="text-muted mb-0">Cédula: <span id="label-cedula" class="fw-semibold">---</span></p>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 1: MI PERFIL -->
+        <div id="mi-perfil" class="section-view active-view">
+            <div class="row justify-content-center">
+                <div class="col-xl-9 col-lg-11">
+                    <div class="card card-custom p-4 shadow-sm border-0">
+                        <div class="d-flex align-items-center gap-3 mb-4 border-bottom pb-3">
+                            <div class="bg-primary-subtle p-3 rounded-circle text-primary">
+                                <i class="bi bi-person-vcard fs-2"></i>
+                            </div>
+                            <div>
+                                <h4 class="fw-bold text-dark mb-0">Información del Perfil</h4>
+                                <p class="text-muted small mb-0">Datos personales registrados en el sistema del territorio.</p>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-secondary">Nombres</label>
+                                <input type="text" class="form-control bg-light" id="perf-nombre" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-secondary">Apellidos</label>
+                                <input type="text" class="form-control bg-light" id="perf-apellido" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-secondary">Cédula de Identidad</label>
+                                <input type="text" class="form-control bg-light" id="perf-cedula" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-secondary">Teléfono</label>
+                                <input type="text" class="form-control bg-light" id="perf-telefono" readonly>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold text-secondary">Edad</label>
+                                <input type="text" class="form-control bg-light" id="perf-edad" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-secondary">Fecha de Nacimiento</label>
+                                <input type="datetime" class="form-control bg-light" id="perf-fecha_nacimiento" readonly>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold text-secondary">Sexo</label>
+                                <input type="text" class="form-control bg-light" id="perf-sexo" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-secondary">Correo Electrónico</label>
+                                <input type="email" class="form-control bg-light" id="perf-correo" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-secondary">Profesión / Oficio</label>
+                                <input type="text" class="form-control bg-light" id="perf-profesion" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-secondary">Territorio Asignado</label>
+                                <input type="text" class="form-control bg-light fw-bold text-primary" id="perf-territorio" readonly>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold text-secondary">Dirección de Habitación</label>
+                                <textarea class="form-control bg-light" id="perf-direccion" rows="2" readonly></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 2: ACTIVIDADES -->
+        <div id="actividades" class="section-view">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h3 class="fw-bold mb-1">Actividades del Territorio</h3>
+                    <p class="text-muted small mb-0">Inscríbete o consulta el estado de los eventos organizados por los líderes.</p>
+                </div>
+            </div>
+
+            <!-- Contenedor dinámico de Tarjetas -->
+            <div class="row g-4" id="contenedor-actividades">
+                <!-- Se llenará mediante JS -->
+            </div>
+        </div>
+
+        <!-- SECCIÓN 3: BITÁCORA / REGISTRO DE ACCIONES -->
+        <div id="registro-acciones" class="section-view">
+            <h3 class="fw-bold mb-3">Bitácora de Acciones</h3>
+            <p class="text-muted small">Historial detallado de operaciones realizadas dentro de la sesión activa.</p>
+            <div class="card card-custom p-3 border-0 shadow-sm">
+                <ul class="list-group list-group-flush" id="lista-bitacora">
+                    <li class="list-group-item text-muted">Sesión iniciada correctamente.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DETALLE DE ACTIVIDAD -->
+    <div class="modal fade" id="modalActividad" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="mod-titulo">Detalle de Actividad</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <img id="mod-imagen" src="" class="img-fluid rounded mb-3 w-100 object-fit-cover" style="max-height: 280px;" alt="Imagen de actividad">
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="badge" id="mod-status"></span>
+                        <small class="text-muted">Publicado por: <span id="mod-creador" class="fw-semibold text-dark"></span></small>
+                    </div>
+
+                    <div class="p-3 bg-light rounded mb-3">
+                        <div class="row text-center text-md-start">
+                            <div class="col-md-6 mb-2 mb-md-0">
+                                <i class="bi bi-calendar-check text-primary me-1"></i> <strong>Inicio:</strong> <span id="mod-fecha-inicio"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <i class="bi bi-calendar-x text-danger me-1"></i> <strong>Finalización:</strong> <span id="mod-fecha-fin"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h6 class="fw-bold text-secondary mb-1">Descripción Completa</h6>
+                    <p id="mod-descripcion" class="text-muted" style="white-space: pre-line;"></p>
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" id="btn-accion-actividad" class="btn btn-primary fw-bold px-4">Inscribirse</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LÓGICA GENERAL -->
+    <script>
+
+// 1. VERIFICACIÓN DE SESIÓN EN EL SERVIDOR (Obligatoria por cada acción/cambio)
+async function verificarSesionServidor() {
+        try {
+            const { data: { session }, error } = await _supabase.auth.getSession();
+            
+            // Si Supabase detecta que no hay sesión, el token expiró o es inválido
+            if (error || !session) {
+                throw new Error("Sesión inválida o expirada en el servidor.");
+            }
+            return true;
+        } catch (err) {
+            console.warn("Seguridad: Sesión rechazada por el servidor.", err.message);
+            await destruirSesionSegura();
+            return false;
+        }
+    }
+
+    // 2. DESTRUCCIÓN SEGURA DE LA SESIÓN EN EL SERVIDOR
+    async function destruirSesionSegura() {
+        try {
+            // Revoca el token en el servidor de Supabase
+            await _supabase.auth.signOut();
+        } catch (err) {
+            console.error("Error al revocar en el servidor:", err);
+        } finally {
+            sessionStorage.clear();
+            localStorage.clear();
+            alert("Su sesión ha expirado por inactividad o seguridad.");
+            window.location.href = 'Login.html';
+        }
+    }
+
+    // 3. TEMPORIZADOR DE INACTIVIDAD CON REVOCACIÓN EN SERVIDOR (5 Minutos)
+    const TIEMPO_INACTIVIDAD = 5 * 60 * 1000; 
+    let temporizadorInactividad;
+
+    function reiniciarTemporizadorInactividad() {
+        clearTimeout(temporizadorInactividad);
+        // A los 5 minutos sin actividad, fuerza la revocación en el servidor
+        temporizadorInactividad = setTimeout(destruirSesionSegura, TIEMPO_INACTIVIDAD);
+    }
+
+    // Escuchar eventos de interacción del usuario
+    ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evento => {
+        window.addEventListener(evento, reiniciarTemporizadorInactividad);
+    });
+
+    // Iniciar el temporizador al cargar
+    reiniciarTemporizadorInactividad();
+
+    // 4. MODIFICACIÓN EN LA NAVEGACIÓN ENTRE PESTAÑAS (Verifica sesión antes de cambiar)
+    async function cambiarPestana(idSeccion, botonClickeado) {
+        // Validación estricta con el servidor antes de permitir ver otra sección
+        const sesionValida = await verificarSesionServidor();
+        if (!sesionValida) return;
+
+        document.querySelectorAll('.section-view').forEach(view => {
+            view.classList.remove('active-view');
+        });
+        document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+            link.classList.remove('active');
+        });
+
+        const seccion = document.getElementById(idSeccion);
+        if (seccion) seccion.classList.add('active-view');
+        if (botonClickeado) botonClickeado.classList.add('active');
+
+        // Reiniciar inactividad al cambiar de pestaña con éxito
+        reiniciarTemporizadorInactividad();
+    }
+
+        let datosUsuarioActual = null;
+        let actividadesMock = [];
+        let inscripcionesUsuario = new Set();
+
+        // 1. CARGA DE DATOS DE USUARIO Y PERFIL
+        async function cargarDatosUsuario() {
+            try {
+                const { data: { session } } = await _supabase.auth.getSession();
+                let cedulaBusqueda = session?.user?.email ? session.user.email.split('@')[0] : sessionStorage.getItem('cedula_usuario');
+
+                if (!cedulaBusqueda) return;
+
+                const { data: usuario, error } = await _supabase
+                    .from('usuarios')
+                    .select('*')
+                    .eq('cedula', cedulaBusqueda)
+                    .maybeSingle();
+
+                if (error || !usuario) return;
+
+                datosUsuarioActual = usuario;
+                sessionStorage.setItem('usuario_id', usuario.id);
+
+                // Llenar Encabezado
+                if (document.getElementById('label-cedula')) document.getElementById('label-cedula').textContent = usuario.cedula || '';
+                if (document.getElementById('nombreusuario')) document.getElementById('nombreusuario').textContent = usuario.nombre || '';
+                if (document.getElementById('apellidousuario')) document.getElementById('apellidousuario').textContent = usuario.apellido || '';
+
+                // Llenar Pestaña "Mi Perfil"
+                document.getElementById('perf-nombre').value = usuario.nombre || '';
+                document.getElementById('perf-apellido').value = usuario.apellido || '';
+                document.getElementById('perf-cedula').value = usuario.cedula || '';
+                document.getElementById('perf-telefono').value = usuario.telefono || '';
+                document.getElementById('perf-correo').value = usuario.email_personal || '';
+                document.getElementById('perf-edad').value = usuario.edad || '';
+                document.getElementById('perf-fecha_nacimiento').value = usuario.fecha_nacimiento || '';
+                document.getElementById('perf-sexo').value = usuario.sexo === 'm' ? 'Masculino' : 'Femenino';
+                document.getElementById('perf-profesion').value = usuario.profesion || 'No especificada';
+                document.getElementById('perf-direccion').value = usuario.direccion || 'Sin dirección registrada';
+
+                // Consultar Territorio
+                const { data: miembroData } = await _supabase
+                    .from('miembros')
+                    .select('territorio_id')
+                    .eq('usuario_id', usuario.id)
+                    .maybeSingle();
+
+                if (miembroData?.territorio_id) {
+                    const { data: terrData } = await _supabase
+                        .from('territorios')
+                        .select('nombre')
+                        .eq('id', miembroData.territorio_id)
+                        .maybeSingle();
+
+                    document.getElementById('perf-territorio').value = terrData?.nombre || 'Sin territorio asignado';
+                } else {
+                    document.getElementById('perf-territorio').value = 'Sin territorio asignado';
+                }
+
+                registrarAccionBitacora("Perfil de usuario cargado con éxito.");
+
+            } catch (err) {
+                console.error("Error al cargar perfil:", err);
+            }
+        }
+
+        // 2. RENDERIZAR ACTIVIDADES
+        function cargarActividades() {
+            // Ejemplo de estructura de datos para tarjetas
+            actividadesMock = [
+                {
+                    id: 1,
+                    titulo: "Jornada Social de Salud",
+                    creador: "Líder Andrés Bello",
+                    descripcion: "Atención médica preventiva, entrega de medicamentos y actividades recreativas para las familias del sector territorial.",
+                    fecha_inicio: "2026-11-05 08:00 AM",
+                    fecha_fin: "2026-11-05 02:00 PM",
+                    status: "activo", // activo, en curso, finalizada
+                    imagen: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=600&q=80"
+                },
+                {
+                    id: 2,
+                    titulo: "Taller de Innovación y Tecnología",
+                    creador: "Directiva de Jóvenes",
+                    descripcion: "Capacitación práctica en reparación de microelectrónica básica y uso responsable de herramientas digitales comunitarias.",
+                    fecha_inicio: "2026-10-20 09:00 AM",
+                    fecha_fin: "2026-10-25 04:00 PM",
+                    status: "en curso",
+                    imagen: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=600&q=80"
+                },
+                {
+                    id: 3,
+                    titulo: "Confraternidad Territorial",
+                    creador: "Líder María Gómez",
+                    descripcion: "Reunión general de integración y planificación para el cierre del año junto a toda la comunidad.",
+                    fecha_inicio: "2026-09-15 05:00 PM",
+                    fecha_fin: "2026-09-15 08:00 PM",
+                    status: "finalizada",
+                    imagen: "https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=600&q=80"
+                }
+            ];
+
+            const contenedor = document.getElementById('contenedor-actividades');
+            contenedor.innerHTML = '';
+
+            actividadesMock.forEach(act => {
+                let badgeClass = "bg-success";
+                let statusTxt = "Activa";
+                if (act.status === "en curso") { badgeClass = "bg-primary"; statusTxt = "En curso"; }
+                if (act.status === "finalizada") { badgeClass = "bg-secondary"; statusTxt = "Finalizada"; }
+
+                const isInscrito = inscripcionesUsuario.has(act.id);
+
+                const cardHtml = `
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100 shadow-sm border-0 card-custom overflow-hidden">
+                            <img src="${act.imagen}" class="card-img-top object-fit-cover" style="height: 180px;" alt="${act.titulo}">
+                            <div class="card-body d-flex flex-column">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="badge ${badgeClass}">${statusTxt}</span>
+                                    ${isInscrito ? '<span class="badge bg-info text-dark"><i class="bi bi-check-circle"></i> Inscrito</span>' : ''}
+                                </div>
+                                <h5 class="card-title fw-bold text-dark">${act.titulo}</h5>
+                                <p class="card-text text-muted small text-truncate-2 mb-3">${act.descripcion}</p>
+                                <div class="mt-auto border-top pt-2">
+                                    <small class="text-muted d-block"><i class="bi bi-person"></i> ${act.creador}</small>
+                                    <small class="text-muted d-block"><i class="bi bi-calendar3"></i> ${act.fecha_inicio.split(' ')[0]}</small>
+                                    <button onclick="abrirModalActividad(${act.id})" class="btn btn-outline-primary btn-sm w-100 mt-3 fw-bold">
+                                        Ver detalles
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                contenedor.innerHTML += cardHtml;
+            });
+        }
+
+        // 3. ABRIR Y GESTIONAR MODAL DE ACTIVIDAD
+        function abrirModalActividad(id) {
+            const act = actividadesMock.find(a => a.id === id);
+            if (!act) return;
+
+            document.getElementById('mod-titulo').textContent = act.titulo;
+            document.getElementById('mod-imagen').src = act.imagen;
+            document.getElementById('mod-creador').textContent = act.creador;
+            document.getElementById('mod-fecha-inicio').textContent = act.fecha_inicio;
+            document.getElementById('mod-fecha-fin').textContent = act.fecha_fin;
+            document.getElementById('mod-descripcion').textContent = act.descripcion;
+
+            const badgeElem = document.getElementById('mod-status');
+            if (act.status === "activo") { badgeElem.className = "badge bg-success"; badgeElem.textContent = "Activa"; }
+            else if (act.status === "en curso") { badgeElem.className = "badge bg-primary"; badgeElem.textContent = "En Curso"; }
+            else { badgeElem.className = "badge bg-secondary"; badgeElem.textContent = "Finalizada"; }
+
+            const btnAccion = document.getElementById('btn-accion-actividad');
+            
+            if (act.status === "finalizada") {
+                btnAccion.style.display = "none";
+            } else {
+                btnAccion.style.display = "inline-block";
+                if (inscripcionesUsuario.has(act.id)) {
+                    btnAccion.className = "btn btn-outline-danger fw-bold px-4";
+                    btnAccion.textContent = "Darse de Baja";
+                    btnAccion.onclick = () => cambiarInscripcion(act.id, false);
+                } else {
+                    btnAccion.className = "btn btn-primary fw-bold px-4";
+                    btnAccion.textContent = "Inscribirse";
+                    btnAccion.onclick = () => cambiarInscripcion(act.id, true);
+                }
+            }
+
+            const modal = new bootstrap.Modal(document.getElementById('modalActividad'));
+            modal.show();
+        }
+
+        function cambiarInscripcion(idActividad, inscribir) {
+            const modalElem = document.getElementById('modalActividad');
+            const modal = bootstrap.Modal.getInstance(modalElem);
+
+            if (inscribir) {
+                inscripcionesUsuario.add(idActividad);
+                alert("¡Te has inscrito correctamente en esta actividad!");
+                registrarAccionBitacora(`Inscripción registrada en actividad ID #${idActividad}`);
+            } else {
+                inscripcionesUsuario.delete(idActividad);
+                alert("Has cancelado tu inscripción en la actividad.");
+                registrarAccionBitacora(`Baja efectuada en actividad ID #${idActividad}`);
+            }
+
+            if (modal) modal.hide();
+            cargarActividades();
+        }
+
+        // 4. REGISTRO EN BITÁCORA
+        function registrarAccionBitacora(mensaje) {
+            const lista = document.getElementById('lista-bitacora');
+            if (!lista) return;
+            const hora = new Date().toLocaleTimeString();
+            const item = document.createElement('li');
+            item.className = 'list-group-item d-flex justify-content-between align-items-center';
+            item.innerHTML = `<span><i class="bi bi-clock-history me-2 text-primary"></i> ${mensaje}</span> <small class="text-muted">${hora}</small>`;
+            lista.prepend(item);
+        }
+
+        // 5. INTERFAZ: NAVEGACIÓN Y SIDEBAR
+        function cambiarPestana(idSeccion, botonClickeado) {
+            document.querySelectorAll('.section-view').forEach(view => view.classList.remove('active-view'));
+            document.querySelectorAll('.sidebar .nav-link').forEach(link => link.classList.remove('active'));
+
+            const seccion = document.getElementById(idSeccion);
+            if (seccion) seccion.classList.add('active-view');
+            if (botonClickeado) botonClickeado.classList.add('active');
+
+            if (idSeccion === 'actividades') cargarActividades();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            cargarDatosUsuario();
+
+            // Toggle Sidebar
+            const btnToggle = document.getElementById('btn-toggle-sidebar');
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.querySelector('.main-content');
+
+            if (btnToggle && sidebar && mainContent) {
+                btnToggle.addEventListener('click', () => {
+                    sidebar.classList.toggle('toggled');
+                    mainContent.classList.toggle('toggled');
+                });
+            }
+
+            // Cerrar Sesión
+            const btnCerrar = document.getElementById('btnCerrarSesion');
+            if (btnCerrar) {
+                btnCerrar.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    if (confirm("¿Estás seguro de que deseas cerrar tu sesión?")) {
+                        try {
+                            await _supabase.auth.signOut();
+                        } catch (err) {
+                            console.error("Error al salir de Supabase:", err);
+                        } finally {
+                            sessionStorage.clear();
+                            localStorage.clear();
+                            window.location.href = 'Login.html';
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

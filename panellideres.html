@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Usuario - Gestión de Iglesia</title>
+
+    <!-- Bootstrap 5 para un diseño limpio y responsivo -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <link rel="stylesheet" href="estilos.css">
+
+    <!-- 1. SCRIPT GUARDIÁN CON SUPABASE AUTH -->
+<!-- 1. SCRIPT GUARDIÁN SÍNCRONO Y SEGURO -->
+<script>
+
+// Inicialización global del cliente de Supabase
+        const SUPABASE_URL = "https://ttyvwbahzhqkotndrhgv.supabase.co"; 
+        const SUPABASE_KEY = "sb_publishable_xQ70-YHC-hpwZvF1BJKfpg_qvHy-J4W"; 
+        const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        
+    // Validamos de forma inmediata el sessionStorage que se creó al hacer login exitoso
+    const usuarioId = sessionStorage.getItem('usuario_id');
+    if (!usuarioId) {
+        alert("Acceso denegado. Por favor, inicia sesión.");
+        window.location.href = 'Login.html';
+    }
+</script>
+</head>
+<body>
+
+    <!-- BARRA LATERAL (SIDEBAR) -->
+    <div class="sidebar p-3" id="sidebar">
+        <div>
+            <div class="d-flex align-items-center gap-2 px-3 py-4 border-bottom border-secondary mb-4">
+                <i class="bi bi-church fs-3 text-info"></i>
+                <span class="fs-5 fw-bold text-white">Portal Conexión</span>
+            </div>
+            
+            <ul class="nav flex-column gap-1">
+                <li>
+                    <a href="#" class="nav-link active" onclick="cambiarPestana('panel-control', this)">
+                        <i class="bi bi-speedometer2"></i> Registro Territorial
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-link" onclick="cambiarPestana('asistencia', this)">
+                        <i class="bi bi-calendar-event"></i> Asistencia
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-link" onclick="cambiarPestana('registro-acciones', this)">
+                        <i class="bi bi-clock-history"></i> Historial de Acciones
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Botón Inferior de Salida -->
+        <div class="px-3 mb-4">
+            <hr class="text-secondary">
+            <button id="btnCerrarSesion" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2 py-2">
+                <i class="bi bi-box-arrow-left"></i> Cerrar Sesión
+            </button>
+        </div>
+    </div>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div class="main-content">
+
+        <!-- Encabezado Superior -->
+        <div class="d-flex justify-content-between align-items-center mb-5 border-bottom pb-3">
+            <div class="d-flex align-items-center">
+                <!-- BOTÓN HAMBURGUESA -->
+                <button id="btn-toggle-sidebar" class="btn btn-light shadow-sm border me-3">
+                    <i class="bi bi-list fs-4"></i>
+                </button>
+                
+                <div>
+                    <h1 class="h3 fw-bold mb-1" id="saludo-usuario">¡Bienvenido de vuelta!</h1>
+                </div>
+                <p class="text-muted mb-0 ms-3">Nombre: <span id="nombreusuario" class="fw-semibold"></span></p>
+                <p class="text-muted mb-0 ms-3">Apellido: <span id="apellidousuario" class="fw-semibold"></span></p>
+                <p class="text-muted mb-0 ms-3">Cédula: <span id="label-cedula" class="fw-semibold"></span></p>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 1: PANEL DE CONTROL -->
+        <div id="panel-control" class="section-view active-view">
+            <div class="row justify-content-center">
+                <div class="col-xl-8 col-lg-10">
+                    <div class="card card-custom p-4 shadow-sm border-0">
+                        <div class="d-flex align-items-center gap-2 mb-4">
+                            <div class="bg-primary-subtle p-2 rounded-3 text-primary">
+                                <i class="bi bi-geo-alt-fill fs-4"></i>
+                            </div>
+                            <div>
+                                <h4 class="fw-bold text-dark mb-0">Registro Territorial</h4>
+                                <p class="text-muted small mb-0">Ingrese los datos civiles de la persona para incorporarla a la base de datos.</p>
+                            </div>
+                        </div>
+
+                        <div id="alert-container"></div>
+
+                        <form id="form-registro" class="row g-3">
+                            <div class="col-md-12">
+                                <label class="form-label fw-semibold text-secondary">Territorio Asignado</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted"><i class="bi bi-geo-alt"></i></span>
+                                    <input type="text" class="form-control bg-light text-muted fw-semibold" id="territorio" readonly required>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-secondary">Nombre Completo</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted"><i class="bi bi-person"></i></span>
+                                    <input type="text" class="form-control" id="nombre" placeholder="Ej. Juan Andres" required>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-secondary">Apellido Completo</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted"><i class="bi bi-person"></i></span>
+                                    <input type="text" class="form-control" id="apellido" placeholder="Ej. Perez Alcala" required>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-secondary">Cedula</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted"><i class="bi bi-person"></i></span>
+                                    <input type="text" class="form-control" id="cedula" placeholder="Ej. 1478367" required>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-secondary">Teléfono</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted"><i class="bi bi-telephone"></i></span>
+                                    <input type="tel" class="form-control" id="telefono" placeholder="Ej. 04125551234" required>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-secondary">Correo Electrónico</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted"><i class="bi bi-envelope"></i></span>
+                                    <input type="email" class="form-control" id="correo" placeholder="nombre@correo.com">
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold text-secondary">Edad</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted"><i class="bi bi-calendar-event"></i></span>
+                                    <input type="number" class="form-control" id="edad" min="0" max="120" placeholder="Ej. 25" required>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-secondary">Sexo / Género</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted"><i class="bi bi-gender-ambiguous"></i></span>
+                                    <select class="form-select" id="sexo" required>
+                                        <option value="" disabled selected>Seleccione...</option>
+                                        <option value="m">Masculino</option>
+                                        <option value="f">Femenino</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-9">
+                                <label class="form-label fw-semibold text-secondary">Dirección de Habitación</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted"><i class="bi bi-house-door"></i></span>
+                                    <input type="text" class="form-control" id="direccion" placeholder="Ej. Sector Antonio José de Sucre, Calle Principal #5">
+                                </div>
+                            </div>
+
+                            <div class="col-md-9">
+                                <label class="form-label fw-semibold text-secondary">Profesión</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted"><i class="bi bi-briefcase"></i></span>
+                                    <input type="text" class="form-control" id="profesion" placeholder="Carpintero">
+                                </div>
+                            </div>
+
+                            <div class="col-12 mt-4">
+                                <button type="submit" id="btnRegistrar" class="btn btn-primary w-100 py-2.5 fw-bold d-flex align-items-center justify-content-center gap-2">
+                                    <i class="bi bi-cloud-arrow-up"></i> Registrar Persona
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 2: ASISTENCIA -->
+        <div id="asistencia" class="section-view">
+            <h3 class="fw-bold mb-4">Módulos y Asistencia Disponibles</h3>
+        </div>
+
+        <!-- SECCIÓN 3: REGISTRO DE ACCIONES -->
+        <div id="registro-acciones" class="section-view">
+        </div>
+    </div>
+
+    <!-- LÓGICA DE CONTROL INTERNO Y SUPABASE -->
+    <script>
+
+// 1. VERIFICACIÓN DE SESIÓN EN EL SERVIDOR (Obligatoria por cada acción/cambio)
+async function verificarSesionServidor() {
+        try {
+            const { data: { session }, error } = await _supabase.auth.getSession();
+            
+            // Si Supabase detecta que no hay sesión, el token expiró o es inválido
+            if (error || !session) {
+                throw new Error("Sesión inválida o expirada en el servidor.");
+            }
+            return true;
+        } catch (err) {
+            console.warn("Seguridad: Sesión rechazada por el servidor.", err.message);
+            await destruirSesionSegura();
+            return false;
+        }
+    }
+
+    // 2. DESTRUCCIÓN SEGURA DE LA SESIÓN EN EL SERVIDOR
+    async function destruirSesionSegura() {
+        try {
+            // Revoca el token en el servidor de Supabase
+            await _supabase.auth.signOut();
+        } catch (err) {
+            console.error("Error al revocar en el servidor:", err);
+        } finally {
+            sessionStorage.clear();
+            localStorage.clear();
+            alert("Su sesión ha expirado por inactividad o seguridad.");
+            window.location.href = 'Login.html';
+        }
+    }
+
+    // 3. TEMPORIZADOR DE INACTIVIDAD CON REVOCACIÓN EN SERVIDOR (5 Minutos)
+    const TIEMPO_INACTIVIDAD = 5 * 60 * 1000; 
+    let temporizadorInactividad;
+
+    function reiniciarTemporizadorInactividad() {
+        clearTimeout(temporizadorInactividad);
+        // A los 5 minutos sin actividad, fuerza la revocación en el servidor
+        temporizadorInactividad = setTimeout(destruirSesionSegura, TIEMPO_INACTIVIDAD);
+    }
+
+    // Escuchar eventos de interacción del usuario
+    ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evento => {
+        window.addEventListener(evento, reiniciarTemporizadorInactividad);
+    });
+
+    // Iniciar el temporizador al cargar
+    reiniciarTemporizadorInactividad();
+
+    // 4. MODIFICACIÓN EN LA NAVEGACIÓN ENTRE PESTAÑAS (Verifica sesión antes de cambiar)
+    async function cambiarPestana(idSeccion, botonClickeado) {
+        // Validación estricta con el servidor antes de permitir ver otra sección
+        const sesionValida = await verificarSesionServidor();
+        if (!sesionValida) return;
+
+        document.querySelectorAll('.section-view').forEach(view => {
+            view.classList.remove('active-view');
+        });
+        document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+            link.classList.remove('active');
+        });
+
+        const seccion = document.getElementById(idSeccion);
+        if (seccion) seccion.classList.add('active-view');
+        if (botonClickeado) botonClickeado.classList.add('active');
+
+        // Reiniciar inactividad al cambiar de pestaña con éxito
+        reiniciarTemporizadorInactividad();
+    }
+
+// 2. CARGAR DATOS DEL USUARIO Y SU TERRITORIO
+async function cargarDatosUsuario() {
+            try {
+                // Obtener sesión activa de Supabase
+                const { data: { session } } = await _supabase.auth.getSession();
+                
+                // Si no hay sesión de Supabase Auth, intentar recuperar de sessionStorage
+                let cedulaBusqueda = "";
+                if (session && session.user && session.user.email) {
+                    cedulaBusqueda = session.user.email.split('@')[0];
+                } else {
+                    cedulaBusqueda = sessionStorage.getItem('cedula_usuario');
+                }
+
+                if (!cedulaBusqueda) return;
+
+                // Consultar directamente por cédula en la tabla usuarios
+                const { data: usuario, error } = await _supabase
+                    .from('usuarios')
+                    .select('id, cedula, nombre, apellido, email')
+                    .eq('cedula', cedulaBusqueda)
+                    .maybeSingle();
+
+                if (error) {
+                    console.error("Error al obtener perfil:", error);
+                    return;
+                }
+
+                if (usuario) {
+                    // Guardar ID numérico real de la tablausuarios
+                    sessionStorage.setItem('usuario_id', usuario.id);
+
+                    // Actualizar interfaz
+                    if (document.getElementById('label-cedula')) document.getElementById('label-cedula').textContent = usuario.cedula || '';
+                    if (document.getElementById('nombreusuario')) document.getElementById('nombreusuario').textContent = usuario.nombre || '';
+                    if (document.getElementById('apellidousuario')) document.getElementById('apellidousuario').textContent = usuario.apellido || '';
+
+                    // Consultar territorio por usuario_id
+                    const { data: miembroData } = await _supabase
+                        .from('miembros')
+                        .select('territorio_id')
+                        .eq('usuario_id', usuario.id)
+                        .maybeSingle();
+
+                    if (miembroData && miembroData.territorio_id) {
+                        const { data: terrData } = await _supabase
+                            .from('territorios')
+                            .select('nombre')
+                            .eq('id', miembroData.territorio_id)
+                            .maybeSingle();
+
+                        if (document.getElementById('territorio')) {
+                            document.getElementById('territorio').value = terrData?.nombre || 'Sin territorio asignado';
+                        }
+                    } else if (document.getElementById('territorio')) {
+                        document.getElementById('territorio').value = 'Sin territorio asignado';
+                    }
+                }
+            } catch (err) {
+                console.error("Error en el proceso de carga de perfil:", err);
+            }
+        }
+
+        // Ejecutar la carga inmediatamente al iniciar
+        cargarDatosUsuario();
+
+        // 3. INTERFAZ: BOTÓN TOGGLE DE LA SIDEBAR
+        const btnToggle = document.getElementById('btn-toggle-sidebar');
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.querySelector('.main-content');
+
+        if (btnToggle && sidebar && mainContent) {
+            btnToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('toggled');
+                mainContent.classList.toggle('toggled');
+            });
+        }
+
+        // 4. INTERFAZ: NAVEGACIÓN ENTRE PESTAÑAS
+        function cambiarPestana(idSeccion, botonClickeado) {
+            document.querySelectorAll('.section-view').forEach(view => {
+                view.classList.remove('active-view');
+            });
+            document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+
+            const seccion = document.getElementById(idSeccion);
+            if (seccion) seccion.classList.add('active-view');
+            if (botonClickeado) botonClickeado.classList.add('active');
+        }
+
+        // 5. CONTROL DE CERRAR SESIÓN (Actualizado con Supabase Auth signOut)
+// 5. CONTROL DE CERRAR SESIÓN (Forzado y Asíncrono)
+document.addEventListener('DOMContentLoaded', () => {
+            const btnCerrar = document.getElementById('btnCerrarSesion');
+            if (btnCerrar) {
+                btnCerrar.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    if (confirm("¿Estás seguro de que deseas cerrar tu sesión?")) {
+                        try {
+                            await _supabase.auth.signOut();
+                        } catch (err) {
+                            console.error("Error al cerrar sesión en Supabase:", err);
+                        } finally {
+                            sessionStorage.clear();
+                            localStorage.clear();
+                            window.location.href = 'Login.html';
+                        }
+                    }
+                });
+            }
+        });
+
+        // 6. ESCUCHA EL ENVÍO DEL FORMULARIO DE REGISTRO (Removida la columna password_hash por seguridad)
+        const formRegistro = document.getElementById('form-registro');
+        if(formRegistro) {
+            formRegistro.addEventListener('submit', async function(e) {
+                e.preventDefault(); 
+                e.stopPropagation();
+
+                const btnRegistrar = document.getElementById('btnRegistrar');
+                if(btnRegistrar) {
+                    btnRegistrar.disabled = true;
+                    btnRegistrar.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando en la nube...`;
+                }
+
+                try {
+                    const cedula = document.getElementById('cedula').value.trim();
+                    const nombre = document.getElementById('nombre').value.trim();
+                    const apellido = document.getElementById('apellido').value.trim();
+                    const telefono = document.getElementById('telefono').value.trim();
+                    const correo = document.getElementById('correo').value.trim() || `${cedula}@sistema.com`;
+                    const edad = parseInt(document.getElementById('edad').value) || 0;
+                    const sexo = document.getElementById('sexo').value;
+                    const direccion = document.getElementById('direccion').value.trim() || null;
+                    const profesion = document.getElementById('profecion').value.trim() || null;
+
+                    const { data, error } = await _supabase
+                        .from('usuarios')
+                        .insert([{
+                            cedula: cedula,
+                            nombre: nombre,
+                            apellido: apellido,
+                            telefono: telefono,
+                            email: correo,
+                            edad: edad,
+                            sexo: sexo,
+                            direccion: direccion,
+                            profesion: profesion,
+                            tipo_usuario: 'miembro'
+                        }]);
+
+                    if (error) {
+                        console.error("Error devuelto por Supabase:", error);
+                        if (error.code === '23505') {
+                            alert("Error: La cédula o el correo ingresado ya se encuentran registrados.");
+                        } else {
+                            alert("Error en la base de datos [" + error.code + "]: " + error.message);
+                        }
+                    } else {
+                        alert("¡Persona registrada exitosamente!");
+                        formRegistro.reset();
+                        cargarDatosUsuario();
+                    }
+
+                } catch (err) {
+                    console.error("Error de ejecución durante el envío:", err);
+                    alert("Ocurrió un error inesperado en el script.");
+                } finally {
+                    if(btnRegistrar) {
+                        btnRegistrar.disabled = false;
+                        btnRegistrar.innerHTML = `<i class="bi bi-cloud-arrow-up"></i> Registrar Persona`;
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
