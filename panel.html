@@ -24,7 +24,7 @@
         const cedulaVal = sessionStorage.getItem('cedula_usuario');
         if (!usuarioIdVal && !cedulaVal) {
             alert("Acceso denegado. Por favor, inicia sesión.");
-            window.location.href = 'Login.html';
+            window.location.href = 'index.html';
         }
     </script>
 </head>
@@ -251,7 +251,7 @@ async function verificarSesionServidor() {
             sessionStorage.clear();
             localStorage.clear();
             alert("Su sesión ha expirado por inactividad o seguridad.");
-            window.location.href = 'Login.html';
+            window.location.href = 'index.html';
         }
     }
 
@@ -540,7 +540,7 @@ async function verificarSesionServidor() {
                         } finally {
                             sessionStorage.clear();
                             localStorage.clear();
-                            window.location.href = 'Login.html';
+                            window.location.href = 'index.html';
                         }
                     }
                 });
